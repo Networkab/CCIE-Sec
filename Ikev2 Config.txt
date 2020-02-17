@@ -1,0 +1,92 @@
+IKEv2
+
+!R1 Config
+!
+crypto ikev2 proposal PROP-1
+ encryption 3des
+ integrity md5 sha1
+ group 2 5
+!
+crypto ikev2 policy POL-1
+ proposal PROP-1
+!
+crypto ikev2 keyring KR-1
+ peer R2
+  address 192.1.20.1
+  pre-shared-key local cisco111
+  pre-shared-key remote cisco222
+ !
+!
+!
+crypto ikev2 profile IKEv2-PROF
+ match identity remote address 192.1.20.1 255.255.255.255
+ authentication local pre-share
+ authentication remote pre-share
+ keyring local KR-1
+!
+!
+!
+crypto ipsec transform-set TSET esp-3des esp-sha-hmac
+ mode tunnel
+!
+!
+access-list 101 permit ip 10.1.1.0 0.0.0.255 10.2.2.0 0.0.0.255 
+!
+!
+!
+crypto map CMAP 10 ipsec-isakmp
+ set peer 192.1.20.1
+ set transform-set TSET
+ set ikev2-profile IKEv2-PROF
+ match address 101
+!
+!
+interface GigabitEthernet0/0
+ crypto map CMAP
+
+==============================================================================
+!R2 Config
+!
+crypto ikev2 proposal PROP-1
+ encryption 3des
+ integrity md5 sha1
+ group 2 5
+!
+crypto ikev2 policy POL-1
+ proposal PROP-1
+!
+crypto ikev2 keyring KR-1
+ peer R1
+  address 192.1.10.1
+  pre-shared-key remote cisco111
+  pre-shared-key local cisco222
+ !
+!
+!
+crypto ikev2 profile IKEv2-PROF
+ match identity remote address 192.1.10.1 255.255.255.255
+ authentication local pre-share
+ authentication remote pre-share
+ keyring local KR-1
+!
+!
+!
+crypto ipsec transform-set TSET esp-3des esp-sha-hmac
+ mode tunnel
+!
+!
+access-list 101 permit ip 10.2.2.0 0.0.0.255 10.1.1.0 0.0.0.255 
+
+!
+!
+!
+crypto map CMAP 10 ipsec-isakmp
+ set peer 192.1.10.1
+ set transform-set TSET
+ set ikev2-profile IKEv2-PROF
+ match address 101
+!
+!
+interface GigabitEthernet0/1
+ crypto map CMAP
+==================================================================================

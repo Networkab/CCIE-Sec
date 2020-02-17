@@ -1,0 +1,100 @@
+----------------------------------------------------
+Flex VPN Config With D-VTI Spooks Good Config
+---------------------------------------------------
+
+!Phase 1 Same as hub Config
+
+!Phase 1A Proposal
+
+!
+crypto ikev2 proposal PROP-1
+ encryption 3des
+ integrity md5
+ group 2
+!
+
+!Phase 1 B Ikev2 Policy
+
+crypto ikev2 policy POL-1
+ proposal PROP-1
+!
+
+!Phase 1C Keyring
+
+crypto ikev2 keyring KR-1
+ peer Spokes
+  address 0.0.0.0 0.0.0.0
+  pre-shared-key cisco123
+!
+Phase 1D Ikev2 Profile
+!
+crypto ikev2 profile IKEv2-PROF
+ match identity remote address 0.0.0.0
+ authentication local pre-share
+ authentication remote pre-share
+ keyring local KR-1
+  
+!
+
+Phase 2 ESP Transform-set
+
+!
+crypto ipsec transform-set TSET esp-3des esp-md5-hmac
+ mode tunnel
+!
+
+!Phase 3 IPSec Profile
+
+crypto ipsec profile IPROF
+ set transform-set TSET
+ set ikev2-profile IKEv2-PROF
+!
+
+!Step4 Create tunnel int and tell it to get ip from the pool on the hub
+!
+interface Tunnel1
+ ip address negotiated
+ ip nhrp network-id 111
+ ip nhrp shortcut virtual-template 1
+ tunnel source GigabitEthernet0/2
+ tunnel destination 192.1.10.1
+ tunnel protection ipsec profile IPROF
+
+!Step5 Create a virtual Template ! The tunnel int that will be create by the virtual template will get ip from the tunnel int that getting ip from the hub
+
+!
+
+interface Virtual-Template1 type tunnel
+ ip unnumbered Tunnel1
+ ip nhrp network-id 111
+ tunnel source GigabitEthernet0/2
+ tunnel protection ipsec profile IPROF
+
+!
+
+!Step6 Apply the virtual Template to ikev2 Profile
+
+crypto ikev2 profile IKEv2-PROF
+ virtual-template 1
+!
+
+!Step7 Routing Protocol
+
+router eigrp 90
+ network 10.0.0.0
+ network 172.16.0.0
+ network 192.168.1.0
+!
+
+!Step8 Configure ikev2 authorization Profile !AAA is a requirement
+
+aaa new-model
+aaa authorization network default local
+
+crypto ikev2 authorization policy default
+ route set interface
+
+!Step9 Apply Authorization Policy to ikev2 Profile
+ 
+crypto ikev2 profile IKEv2-PROF
+ aaa authorization group override psk list default default 

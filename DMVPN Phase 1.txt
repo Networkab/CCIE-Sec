@@ -1,0 +1,80 @@
+==============================================================================================
+Configure DMVPN Setup with R1 being th NHS. Configure the other devices to use R1 as the NGS.
+==============================================================================================
+M-GRE NHRP
+==========================================
+!R1 NHS Server
+
+!phase 1
+
+interface Tunnel1
+ ip address 192.168.1.1 255.255.255.0
+ no ip redirects
+ no ip split-horizon eigrp 90
+ ip nhrp map multicast dynamic
+ ip nhrp network-id 1
+ no ip split-horizon
+ tunnel source 150.5.5.1
+ tunnel mode gre multipoint
+!
+
+router eigrp 90
+ network 10.0.0.0
+ network 172.16.0.0
+ network 192.168.1.0
+!
+========================================
+!R2 NHRP Client1
+
+interface Tunnel1
+ ip address 192.168.1.2 255.255.255.0
+ no ip redirects
+ ip nhrp map 192.168.1.1 150.5.5.1
+ ip nhrp map multicast 150.5.5.1
+ ip nhrp network-id 1
+ ip nhrp nhs 192.168.1.1
+ tunnel source 200.1.1.1
+ tunnel mode gre multipoint
+!
+
+router eigrp 90
+ network 10.0.0.0
+ network 172.16.0.0
+ network 192.168.1.0
+==========================================
+!R3 NHRP Client2
+
+interface Tunnel1
+ ip address 192.168.1.3 255.255.255.0
+ no ip redirects
+ ip nhrp map 192.168.1.1 150.5.5.1
+ ip nhrp map multicast 150.5.5.1
+ ip nhrp network-id 1
+ ip nhrp nhs 192.168.1.1
+ tunnel source 75.1.1.1
+ tunnel mode gre multipoint
+!
+
+router eigrp 90
+ network 10.0.0.0
+ network 172.16.0.0
+ network 192.168.1.0
+=========================================
+!R4 NHRP Client3
+
+interface Tunnel1
+ ip address 192.168.1.4 255.255.255.0
+ no ip redirects
+ ip nhrp map 192.168.1.1 150.5.5.1
+ ip nhrp map multicast 150.5.5.1
+ ip nhrp network-id 1
+ ip nhrp nhs 192.168.1.1
+ tunnel source 199.1.1.1
+ tunnel mode gre multipoint
+!
+
+router eigrp 90
+ network 10.0.0.0
+ network 172.16.0.0
+ network 192.168.1.0
+==========================================

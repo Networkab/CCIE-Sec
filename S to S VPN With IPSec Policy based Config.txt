@@ -1,0 +1,75 @@
+Lab1 Configure a Site to Site IPSec VPN Tunnel between R1 & R3 to encrypt traffic 
+between 10.1.1.0/24 & 10.2.2.0/24 behind the respective routers Policy base VPN
+==================================================================================
+R1
+
+! 1. Phase I-ISAKMP Parameters
+
+crypto isakmp policy 5
+authentication pre-share
+encryption 3des
+hash md5
+group 2
+
+crypto isakmp key cisco123 address 200.1.1.1
+
+!2. Pahse II-ESP Parameters
+
+crypto ipsec transform-set TEST esp-3des esp-sha-hmac
+
+!3. Intersting traffic- Crypto ACL
+
+access-list 101 permit ip 10.1.1.0 0.0.0.255 10.2.2.0 0.0.0.255
+
+!4. Link the above parameters to each other. This is done by using a Crypto Map Component
+
+Crypto map CMAP 10 ipsec-isakmp
+match address 101
+set peer 200.1.1.1
+set transform-set TEST
+
+!5. Apply the Crypto Map on the outgoing Interface
+
+Interface g0/0
+crypto map CMAP
+===============================================================================================
+R2
+
+! 1. Phase I-ISAKMP Parameters
+
+crypto isakmp policy 15
+authentication pre-share
+encryption 3des
+hash md5
+group 2
+
+crypto isakmp key cisco123 address 199.1.1.1
+
+!2. Pahse II-ESP Parameters
+
+crypto ipsec transform-set TEST esp-3des esp-sha-hmac
+
+!3. Intersting traffic- Crypto ACL
+
+access-list 101 permit ip 10.2.2.0 0.0.0.255 10.1.1.0 0.0.0.255 
+
+!4. Link the above parameters to each other. This is done by using a Crypto Map Component
+
+Crypto map CMAP 10 ipsec-isakmp
+match address 101
+set peer 199.1.1.1
+set transform-set TEST
+
+!5. Apply the Crypto Map on the outgoing Interface
+
+Interface g0/1
+crypto map CMAP
+================================================================================================
+Verification
+Phase I show crypto isakmp sa
+Phase II show cryp ipsec sa
+
+
+
+
+

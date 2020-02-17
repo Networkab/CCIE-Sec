@@ -1,0 +1,143 @@
+Site To Multisite IPSec VPN Configuration (HUB) 
+Public IP:192.1.10.0/24
+Private LANs: 10.1.1.0/24 \172.16.1.0/24
+===============================================
+crypto isakmp policy 5
+ encr 3des
+ hash md5
+ authentication pre-share
+ group 2
+crypto isakmp key cisco123 address 192.1.20.1
+crypto isakmp key cisco123 address 192.1.40.1
+crypto isakmp key cisco123 address 192.1.30.1
+!
+!
+crypto ipsec transform-set TEST esp-3des esp-sha-hmac
+ mode tunnel
+!
+!
+crypto map CMAP 10 ipsec-isakmp
+ set peer 192.1.20.1
+ set transform-set TEST
+ match address 101
+crypto map CMAP 20 ipsec-isakmp
+ set peer 192.1.30.1
+ set transform-set TEST
+ match address 102
+crypto map CMAP 30 ipsec-isakmp
+ set peer 192.1.40.1
+ set transform-set TEST
+ match address 103
+!
+interface GigabitEthernet0/0
+ ip address 192.1.10.1 255.255.255.0
+ duplex auto
+ speed auto
+ media-type rj45
+ crypto map CMAP
+!
+access-list 101 permit ip 10.1.1.0 0.0.0.255 10.2.2.0 0.0.0.255
+access-list 102 permit ip 10.1.1.0 0.0.0.255 10.3.3.0 0.0.0.255
+access-list 103 permit ip 10.1.1.0 0.0.0.255 10.4.4.0 0.0.0.255
+===============================================================
+===============================================================
+Spoke One 
+Public IP: 192.1.20.1/24 
+Private LANs: 10.2.2.0/24 - 172.16.2.0/24
+===============================================================
+crypto isakmp policy 5
+ encr 3des
+ hash md5
+ authentication pre-share
+ group 2
+crypto isakmp key cisco123 address 192.1.10.1
+!
+!
+crypto ipsec transform-set TEST esp-3des esp-sha-hmac
+ mode tunnel
+!
+!
+!
+crypto map CMAP 10 ipsec-isakmp
+ set peer 192.1.10.1
+ set transform-set TEST
+ match address 101
+!
+interface GigabitEthernet0/1
+ ip address 192.1.20.1 255.255.255.0
+ duplex auto
+ speed auto
+ media-type rj45
+ crypto map CMAP
+!
+access-list 101 permit ip 10.2.2.0 0.0.0.255 10.1.1.0 0.0.0.255
+================================================================
+================================================================
+Spoke Two 
+Public IP:192.1.30.1/24
+Private LANs: 10.3.3.0/24-172.16.3.0/24
+===============================================================
+crypto isakmp policy 5
+ encr 3des
+ hash md5
+ authentication pre-share
+ group 2
+crypto isakmp key cisco123 address 192.1.10.1
+!
+!
+crypto ipsec transform-set TEST esp-3des esp-sha-hmac
+ mode tunnel
+!
+!
+!
+crypto map CMAP 10 ipsec-isakmp
+ set peer 192.1.10.1
+ set transform-set TEST
+ match address 101
+!
+!
+interface GigabitEthernet0/2
+ ip address 192.1.30.1 255.255.255.0
+ duplex auto
+ speed auto
+ media-type rj45
+ crypto map CMAP
+!
+!
+access-list 101 permit ip 10.3.3.0 0.0.0.255 10.1.1.0 0.0.0.255
+=================================================================
+=================================================================
+Spoke Three 
+Public IP:192.1.40.1/24
+Private LANs: 10.4.4.0/24 - 172.16.4.0/24
+================================================================
+crypto isakmp policy 5
+ encr 3des
+ hash md5
+ authentication pre-share
+ group 2
+crypto isakmp key cisco123 address 192.1.10.1
+!
+!
+crypto ipsec transform-set TEST esp-3des esp-sha-hmac
+ mode tunnel
+!
+!
+!
+crypto map CMAP 10 ipsec-isakmp
+ set peer 192.1.10.1
+ set transform-set TEST
+ match address 101
+!
+!
+interface GigabitEthernet0/3
+ ip address 192.1.40.1 255.255.255.0
+ duplex auto
+ speed auto
+ media-type rj45
+ crypto map CMAP
+!
+!
+access-list 101 permit ip 10.4.4.0 0.0.0.255 10.1.1.0 0.0.0.255
+=================================================================
+

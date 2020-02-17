@@ -1,0 +1,58 @@
+================================================================================================
+IPSec base tunnel VPN Configuration With EIGRP
+===============================================================================================
+
+Note: The only command that changes between GRE-based-IPSec & S-VTI which imliminates GRE from the picture is "tunnel mode ipsec ipv4"
+Just a single command.
+------------------------------------------------------------------------------------------------------------------------------------- 
+R1
+!
+crypto isakmp policy 10
+ encr 3des
+ hash md5
+ authentication pre-share
+ group 2
+crypto isakmp key cisco123 address 192.1.20.1
+!
+!
+crypto ipsec transform-set TEST esp-3des esp-md5-hmac
+ mode transport
+!
+crypto ipsec profile TPROF
+ set transform-set TEST
+!
+interface Tunnel1
+ ip address 192.168.1.1 255.255.255.0
+ tunnel source 192.1.10.1
+ tunnel mode ipsec ipv4
+ tunnel destination 192.1.20.1
+ tunnel protection ipsec profile TPROF
+!
+router eigrp 90
+ network 10.0.0.0
+ network 192.168.1.0
+============================================================================================
+crypto isakmp policy 10
+ encr 3des
+ hash md5
+ authentication pre-share
+ group 2
+crypto isakmp key cisco123 address 192.1.10.1
+!
+!
+crypto ipsec transform-set TEST esp-3des esp-md5-hmac
+ mode transport
+!
+crypto ipsec profile TPROF
+ set transform-set TEST
+!
+interface Tunnel1
+ ip address 192.168.1.2 255.255.255.0
+ tunnel source 192.1.20.1
+ tunnel mode ipsec ipv4
+ tunnel destination 192.1.10.1
+ tunnel protection ipsec profile TPROF
+!
+router eigrp 90
+ network 10.0.0.0
+ network 192.168.1.0

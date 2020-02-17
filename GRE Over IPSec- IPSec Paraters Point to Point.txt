@@ -1,0 +1,42 @@
+================================================================================================
+Lab # 5: Encrypt all the traffic that leaves th tunnel interface by using IPSec (GRE Over IPSec)
+================================================================================================
+R1
+
+! Phase I-ISAKMP Parameters
+
+crypto isakmp policy 10
+ encr 3des
+ hash md5
+ authentication pre-share
+crypto isakmp key cisco123 address 192.1.20.1
+!
+!
+crypto ipsec transform-set TEST esp-3des esp-md5-hmac
+ mode transport
+!
+crypto ipsec profile IPROF
+ set transform-set TEST
+!
+interface Tunnel1
+ tunnel protection ipsec profile IPROF
+================================================================
+R2
+
+! Phase I-ISAKMP Parameters
+crypto isakmp policy 10
+ encr 3des
+ hash md5
+ authentication pre-share
+crypto isakmp key cisco123 address 192.1.10.1
+!
+!
+crypto ipsec transform-set TEST esp-3des esp-md5-hmac
+ mode transport 
+!
+crypto ipsec profile IPROF
+ set transform-set TEST
+!
+interface Tunnel1
+ tunnel protection ipsec profile IPROF
+

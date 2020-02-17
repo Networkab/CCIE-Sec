@@ -1,0 +1,105 @@
+GET VPN
+
+Lab1 : Configuring GET VPN
+
+Key Server Config
+
+!1. Phase I Isakmp Parameters
+
+crypto isakmp policy 10
+ encr 3des
+ hash md5
+ authentication pre-share
+ group 2
+crypto isakmp key cisco123 address 192.168.0.0
+!
+
+!2 Phase II Parameters ESP Parameters
+
+crypto ipsec transform-set TSET esp-3des esp-md5-hmac
+ mode tunnel
+
+!3 Phase III Intresting trafic ACL (Group ACL)
+
+access-list 101 permit ip 10.1.0.0 0.0.255.255 10.1.0.0 0.0.255.255
+
+!4 Phase IV Ipsec Profile
+
+crypto ipsec profile IPROF
+ set transform-set TSET
+!
+
+!5 Phase V Configure GET VPN Group for GDOI
+
+crypto gdoi group ABC
+ identity number 111
+ server local
+  sa ipsec 5
+   profile IPROF
+   match address ipv4 101
+  address ipv4 192.168.50.2
+
+=================================================================================
+show crypto gdoi ks members
+================================================================================
+GM Configuration
+
+!1 Phase I
+
+crypto isakmp policy 10
+ encr 3des
+ hash md5
+ authentication pre-share
+ group 2
+crypto isakmp key cisco123 address 192.168.50.2
+
+
+!2 Configure The GDOI Parameters to oint to the key server
+
+crypto gdoi group CLIENTS
+ identity number 111
+ server address ipv4 192.168.50.2
+!
+
+!3 Configure a Crypto map
+
+crypto map CMAP 10 gdoi
+ set group CLIENTS
+!
+
+!4 Apply the Crypto map to the interface
+
+interface GigabitEthernet0/1
+ crypto map CMAP
+===========================================================
+
+Configure GETVPN Re-Keying
+!
+!1 Generate a Public/Private RSA Key pair to be used to validate the Re-key
+
+crypto key generate rsa modulus 1024 label GETVPN-RK
+
+!2 Configure the GDOI group for Unicast-based Re-keying using the above RSA Key pair
+
+crypto gdoi group ABC
+ server local
+  rekey transport unicast
+  rekey authentication mypubkey rsa GETVPN-RK
+  rekey algarithm 3des-cbc
+--------------------------------------------------------------------------------------
+!Bellow is The GDOI Perimeters After configuring rekeying on the key server
+
+crypto gdoi group ABC
+ identity number 111
+ server local
+ -> rekey authentication mypubkey rsa GETVPN-RK
+ -> rekey transport unicast
+  sa ipsec 5
+   profile IPROF
+   match address ipv4 101
+   replay counter window-size 64
+  address ipv4 192.168.50.2
+
+
+
+

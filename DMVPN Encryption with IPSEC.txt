@@ -1,0 +1,30 @@
+Encrypt The DMVPN Tunnel Using IPSet
+
+This configuration is the same the NHS server and all the clients
+
+!1. Phase I
+
+crypto isakmp policy 10
+ encr 3des
+ hash md5
+ authentication pre-share
+ group 2
+crypto isakmp key cisco123 address 0.0.0.0
+!
+
+!2 Phase II
+
+!
+crypto ipsec transform-set TEST esp-3des esp-sha-hmac
+ mode transport
+!
+
+!3. Phase III IPSec Profile
+
+crypto ipsec profile IPROF
+ set transform-set TEST
+
+!4. Apply the IPSec Profile to the Tunnel Interface
+
+interface Tunnel1
+ tunnel protection ipsec profile IPROF

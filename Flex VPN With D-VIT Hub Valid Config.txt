@@ -1,0 +1,104 @@
+----------------------------------------------------
+Flex VPN Config With D-VTI HUB
+---------------------------------------------------
+
+!Phase 1 A Ikev2 Proposal
+
+crypto ikev2 proposal PROP-1
+ encryption 3des
+ integrity md5
+ group 2
+!
+
+!Phase 1 B Ikev2 Policy
+
+crypto ikev2 policy POL-1
+ proposal PROP-1
+!
+
+!Phase 1 C Ikev2 Keyring
+
+crypto ikev2 keyring KR-1
+ peer Spokes
+  address 0.0.0.0 0.0.0.0
+  pre-shared-key cisco123
+!
+
+!Phase 1 D Ikev2 Profile
+
+!
+crypto ikev2 profile IKEv2-PROF
+ match identity remote address 0.0.0.0
+ authentication local pre-share
+ authentication remote pre-share
+ keyring local KR-1
+ 
+!
+!
+
+!Phase 2 ESP Transform-set
+
+crypto ipsec transform-set TSET esp-3des esp-md5-hmac
+ mode tunnel
+!
+
+!Phase 3 IPSec Profile
+
+crypto ipsec profile IPROF
+ set transform-set TSET
+ set ikev2-profile IKEv2-PROF
+!
+!
+
+! Step 4 Virtual Template tunnel interface for spooks
+
+interface Loopback11
+ ip address 192.168.1.1 255.255.255.0
+
+!
+interface Virtual-Template1 type tunnel
+ ip unnumbered Loopback11
+ ip nhrp network-id 111
+ ip nhrp redirect
+ tunnel source GigabitEthernet0/0
+ tunnel protection ipsec profile IPROF
+!
+
+!Associate virtual template with ikev2 profile
+
+crypto ikev2 profile IKEv2-PROF
+ virtual-template 1
+
+! Step 5 Routing Protocol 
+!
+router eigrp 90
+ network 10.0.0.0
+ network 172.16.0.0
+ network 192.168.1.0
+
+! Step 6 Parameters to Push down the ips to tunnel interfaces of spokes
+
+!Step 6A Pool
+
+!
+ip local pool POOL-A 192.168.1.11 192.168.1.254
+
+!Step 6B Ikev2 Authorization Policy !Used to Push Configuration to peers
+
+!AAA is requirment for this because authorization is done base on AAA
+
+aaa new-model
+aaa authorization network default local
+
+!Now Step 6B Ikev2 Authorization Policy
+
+crypto ikev2 authorization policy default
+ pool POOL-A
+ route set interface
+
+!Step 6C Apply the ikev2 authorization Policy to the ikev2 Profile
+
+crypto ikev2 profile IKEv2-PROF
+ aaa authorization group override psk list default default
+
+

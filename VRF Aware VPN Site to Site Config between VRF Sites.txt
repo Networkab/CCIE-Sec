@@ -1,0 +1,49 @@
+! Note: most of the config is similar with our ipsec based config
+
+!Phase1 isakmp
+
+crypto isakmp policy 10
+ encr 3des
+ hash md5
+ authentication pre-share
+ group 2
+!Note: There is no isakmp key because if wi configure a key here, it will refer to the global routing table.
+
+!Step2 ESP
+
+crypto ipsec transform-set TSET esp-3des esp-md5-hmac
+ mode tunnel
+
+!Step2 Interesting traffic ACL
+
+access-list 101 permit ip 10.1.1.0 0.0.0.255 10.2.2.0 0.0.0.255
+
+!Step4 Crypto map
+
+crypto map CMAP 1 ipsec-isakmp
+ set peer 10.12.12.2
+ set transform-set TSET
+ match address 101
+
+!Step5 Apply Crypto map to interface
+
+interface GigabitEthernet0/1
+ crypto map CMAP
+
+!Now we will configure the new perameters to make the vpn VRF Aware
+
+!Configure a keyring taht can be linked to VRF
+
+crypto keyring KR-Green vrf Green
+  pre-shared-key address 10.12.12.2 key cisco123
+
+!Configure an isakmp profile to stitch the keyring to the crypto map
+
+crypto isakmp profile ISA-Green
+   vrf Green
+   keyring KR-Green
+   match identity address 10.12.12.2 255.255.255.255 Green
+
+!Assign the isakmp profile to the crypto map
+
+crypto map CMAP isakmp-profile ISA-Green

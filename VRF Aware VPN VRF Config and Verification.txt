@@ -1,0 +1,34 @@
+!Step1 VRF Configuration Very Simple
+
+vrf definition Blue
+ 
+ address-family ipv4
+
+!Step2 Adding Interfaces to VRF
+
+interface GigabitEthernet0/0
+ vrf forwarding Blue
+
+!Step3 Routing Protocol !EIGRP/OSPF
+
+!EIGRP
+
+router eigrp 1
+ !
+ address-family ipv4 vrf Green autonomous-system 90
+  network 10.0.0.0
+ exit-address-family
+
+========================================
+!OSPF                                  =
+                                       =
+router ospf 5 vrf Blue                 =
+ router-id 0.0.0.1                     =
+ network 10.0.0.0 0.255.255.255 area 0 =
+!                                      =
+========================================
+
+!VRF Verifications Commands
+
+show ip route vrf Green
+
